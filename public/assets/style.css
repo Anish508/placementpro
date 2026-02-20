@@ -146,7 +146,11 @@ label{
   background:#2D2F31;
   color:#00BFFF;
 }
-
+.btn-disabled {
+  background-color: #555 !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
+}
 .status.selected {
   background:#1e4620;
   color:#4CAF50;

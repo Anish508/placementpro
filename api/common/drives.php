@@ -4,47 +4,48 @@ require_once "../../middleware/authMiddleware.php";
 require_once "../../utils/response.php";
 require_once "../../config/database.php";
 
-/*
-|--------------------------------------------------------------------------
-| Authenticate (Allow Both TPO & STUDENT)
-|--------------------------------------------------------------------------
-*/
-
-$user = authenticate(); 
-// assuming your middleware returns role inside $user['role']
+$user = authenticate();
 
 $db = new Database();
 $conn = $db->getConnection();
 
 $role = $user['role'];
+$studentId = null;
+$studentBranchId = null;
 
 $whereCondition = "d.status = 'OPEN'";
 
 /*
 |--------------------------------------------------------------------------
-| If STUDENT → Filter by branch
+| If STUDENT → Get studentId + branchId
 |--------------------------------------------------------------------------
 */
 
 if ($role === "STUDENT") {
 
-    $branchQuery = "
-        SELECT branchId 
+    $studentQuery = "
+        SELECT id, branchId 
         FROM Student 
         WHERE userId = {$user['id']}
         LIMIT 1
     ";
 
-    $branchResult = $conn->query($branchQuery);
+    $studentResult = $conn->query($studentQuery);
 
-    if (!$branchResult || $branchResult->num_rows === 0) {
-        jsonResponse(false, "Student branch not found");
+    if (!$studentResult || $studentResult->num_rows === 0) {
+        jsonResponse(false, "Student profile not found");
     }
 
-    $student = $branchResult->fetch_assoc();
+    $student = $studentResult->fetch_assoc();
+    $studentId = intval($student['id']);
     $studentBranchId = intval($student['branchId']);
 
-    $whereCondition .= " AND d.branchId = $studentBranchId";
+    // Filter using DriveBranch table
+    $whereCondition .= " AND d.id IN (
+        SELECT driveId 
+        FROM DriveBranch 
+        WHERE branchId = $studentBranchId
+    )";
 }
 
 /*
@@ -61,12 +62,9 @@ SELECT
     d.minCgpa,
     d.maxBacklogs,
     d.status,
-    d.image,
-    c.name AS companyName,
-    b.name AS branchName
+    c.name AS companyName
 FROM Drive d
 JOIN Company c ON d.companyId = c.id
-JOIN Branch b ON d.branchId = b.id
 WHERE $whereCondition
 ORDER BY d.createdAt DESC
 ";
@@ -76,6 +74,22 @@ $result = $conn->query($query);
 $drives = [];
 
 while ($row = $result->fetch_assoc()) {
+
+    if ($role === "STUDENT") {
+
+        $driveId = intval($row['id']);
+
+        $appCheck = $conn->query("
+            SELECT id 
+            FROM Application 
+            WHERE studentId = $studentId 
+            AND driveId = $driveId
+            LIMIT 1
+        ");
+
+        $row['isApplied'] = ($appCheck && $appCheck->num_rows > 0) ? 1 : 0;
+    }
+
     $drives[] = $row;
 }
 

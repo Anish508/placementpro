@@ -148,41 +148,58 @@ async function loadUserInfo(){
 // STUDENT FEATURES
 ///////////////////////////////////////////////////////
 
-async function showStudentDrives(){
+async function showStudentDrives() {
   const token = localStorage.getItem("token");
 
-const res = await fetch("../api/common/drives.php", {
-  headers: {
-    "Authorization": "Bearer " + token
-  }
-});
+  const res = await fetch("../api/common/drives.php", {
+    headers: {
+      "Authorization": "Bearer " + token
+    }
+  });
+
   const data = await res.json();
 
   let html = "<h2> Open Drives</h2>";
-  
-  if(!data.data || data.data.length === 0) {
+
+  if (!data.data || data.data.length === 0) {
     html += "<p>No drives available</p>";
     document.getElementById("content").innerHTML = html;
     return;
   }
 
   html += "<div class='grid'>";
+
   data.data.forEach(drive => {
+
+    const alreadyApplied = drive.isApplied == 1;
+
     html += `
       <div class="card">
         <h4>${drive.title}</h4>
         <p class="secondary">${drive.companyName || 'Company'}</p>
         <p><strong>Min CGPA:</strong> ${drive.minCgpa}</p>
         <p><strong>Max Backlogs:</strong> ${drive.maxBacklogs}</p>
-        <p><strong>Status:</strong> <span class="status-badge status-${drive.status.toLowerCase()}">${drive.status}</span></p>
-        <button onclick="applyDrive(${drive.id})" class="btn-primary">Apply Now</button>
+        <p><strong>Status:</strong> 
+          <span class="status-badge status-${drive.status.toLowerCase()}">
+            ${drive.status}
+          </span>
+        </p>
+
+        <button 
+          onclick="${alreadyApplied ? '' : `applyDrive(${drive.id})`}" 
+          class="btn-primary ${alreadyApplied ? 'btn-disabled' : ''}"
+          ${alreadyApplied ? 'disabled' : ''}
+        >
+          ${alreadyApplied ? 'Already Applied' : 'Apply Now'}
+        </button>
+
       </div>
     `;
   });
-  html += "</div>";
 
+  html += "</div>";
   document.getElementById("content").innerHTML = html;
-}
+} 
 
 async function applyDrive(id){
   const token = localStorage.getItem("token");
@@ -241,7 +258,7 @@ async function showMyApplications(){
         <td><span class="status-badge status-${app.status.toLowerCase()}">${app.status}</span></td>
         <td>${new Date(app.appliedAt).toLocaleDateString()}</td>
         <td>
-          <button onclick="viewApplicationStatus(${app.id})" class="btn-small">View</button>
+          
           <button onclick="deleteApplication(${app.id})" class="btn-small btn-danger">Delete</button>
         </td>
       </tr>
