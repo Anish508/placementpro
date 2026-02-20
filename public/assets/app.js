@@ -518,7 +518,7 @@ async function showStudentEducation(){
         <div class="card">
           <h4>${edu.degree}</h4>
           <p class="secondary">${edu.institute}</p>
-          <p>${edu.year} • <strong>CGPA: ${edu.marks}</strong></p>
+          <p>${edu.year} <strong>CGPA: ${edu.marks}</strong></p>
           <button onclick="deleteEducation(${edu.id})" class="btn-small btn-danger">Delete</button>
         </div>
       `;
@@ -610,7 +610,7 @@ async function showStudentCertifications(){
       html += `
         <div class="card">
           <h4>${cert.name}</h4>
-          <p class="secondary">${cert.issuer} • ${cert.year}</p>
+          <p class="secondary">${cert.issuer}  ${cert.year}</p>
           <button onclick="deleteCertification(${cert.id})" class="btn-small btn-danger">Delete</button>
         </div>
       `;
@@ -628,11 +628,17 @@ async function addCertification(e) {
   e.preventDefault();
   
   const token = localStorage.getItem("token");
+
   const formData = {
-    certName: document.getElementById("certName").value,
-    issuer: document.getElementById("issuer").value,
+    certName: document.getElementById("certName").value.trim(),
+    issuer: document.getElementById("issuer").value.trim(),
     year: parseInt(document.getElementById("certYear").value)
   };
+
+  if (!formData.certName || !formData.issuer || !formData.year) {
+    alert("All fields are required");
+    return;
+  }
 
   const res = await fetch("../api/student/certifications.php", {
     method: "POST",
@@ -645,8 +651,9 @@ async function addCertification(e) {
 
   const data = await res.json();
   alert(data.message);
-  
-  if(data.success) {
+
+  if (data.success) {
+    document.getElementById("certForm").reset();
     showStudentCertifications();
   }
 }
@@ -812,35 +819,9 @@ async function showJobPosts(){
   document.getElementById("content").innerHTML = html;
 }
 
-async function showSkillGapAnalysis(){
-  const token = localStorage.getItem("token");
-
-  const res = await fetch("../api/student/skillGapAnalysis.php", {
-    headers: { "Authorization": "Bearer " + token }
-  });
-
-  const data = await res.json();
-
-  let html = "<h2> Skill Gap Analysis</h2>";
-
-  if(data.success && data.data) {
-    const analysis = data.data;
-    html += `
-      <div class="card">
-        <h3>Your Analysis</h3>
-        <p><strong>Current Skills:</strong> ${analysis.currentSkills || 'No skills added'}</p>
-        <p><strong>Required Skills:</strong> ${analysis.requiredSkills || 'N/A'}</p>
-        <p><strong>Missing Skills:</strong> ${analysis.missingSkills || 'You have all required skills!'}</p>
-        <p><strong>Recommendation:</strong> ${analysis.recommendation || 'Keep improving to increase placement chances'}</p>
-      </div>
-    `;
-  } else {
-    html += "<p>No analysis available. Complete your profile and add skills first.</p>";
-  }
-
-  document.getElementById("content").innerHTML = html;
+function showSkillGapAnalysis() {
+  window.open("https://google.com", "_blank");
 }
-
 async function showGenerateResume(){
   const token = localStorage.getItem("token");
 

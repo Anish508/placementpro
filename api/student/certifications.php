@@ -9,16 +9,34 @@ $user = authenticate("STUDENT");
 $db = new Database();
 $conn = $db->getConnection();
 
-$student = $conn->query("SELECT id FROM Student WHERE userId={$user['id']}")->fetch_assoc();
-$studentId = $student['id'];
+/*
+|--------------------------------------------------------------------------
+| Get Student ID
+|--------------------------------------------------------------------------
+*/
 
-/* GET CERTIFICATIONS */
+$studentQuery = "SELECT id FROM Student WHERE userId = {$user['id']} LIMIT 1";
+$studentResult = $conn->query($studentQuery);
+
+if (!$studentResult || $studentResult->num_rows == 0) {
+    jsonResponse(false, "Student profile not found");
+}
+
+$student = $studentResult->fetch_assoc();
+$studentId = intval($student['id']);
+
+/*
+|--------------------------------------------------------------------------
+| GET CERTIFICATIONS
+|--------------------------------------------------------------------------
+*/
+
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     $result = $conn->query("
         SELECT id, name, issuer, year
         FROM Certification
-        WHERE studentId=$studentId
+        WHERE studentId = $studentId
         ORDER BY year DESC
     ");
 
@@ -31,33 +49,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     jsonResponse(true, "Certification List", $certifications);
 }
 
-/* ADD CERTIFICATION */
+/*
+|--------------------------------------------------------------------------
+| ADD CERTIFICATION
+|--------------------------------------------------------------------------
+*/
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $data = json_decode(file_get_contents("php://input"), true);
 
-    $name = $conn->real_escape_string($data['name']);
-    $issuer = $conn->real_escape_string($data['issuer']);
+    if (!isset($data['certName'], $data['issuer'], $data['year'])) {
+        jsonResponse(false, "All fields are required");
+    }
+
+    $name = $conn->real_escape_string(trim($data['certName']));
+    $issuer = $conn->real_escape_string(trim($data['issuer']));
     $year = intval($data['year']);
 
-    $conn->query("
+    if ($year < 1900 || $year > date("Y") + 1) {
+        jsonResponse(false, "Invalid year");
+    }
+
+    $insertQuery = "
         INSERT INTO Certification (studentId, name, issuer, year)
         VALUES ($studentId, '$name', '$issuer', $year)
-    ");
+    ";
 
-    jsonResponse(true, "Certification Added");
+    if (!$conn->query($insertQuery)) {
+        jsonResponse(false, "Insert failed: " . $conn->error);
+    }
+
+    jsonResponse(true, "Certification Added Successfully");
 }
 
-/* DELETE CERTIFICATION */
+/*
+|--------------------------------------------------------------------------
+| DELETE CERTIFICATION
+|--------------------------------------------------------------------------
+*/
+
 if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
 
     $data = json_decode(file_get_contents("php://input"), true);
-    $certId = intval($data['certificationId'] ?? $data['certId']);
+    $certId = intval($data['certificationId'] ?? 0);
 
-    $conn->query("
+    if (!$certId) {
+        jsonResponse(false, "Certification ID required");
+    }
+
+    $deleteQuery = "
         DELETE FROM Certification
-        WHERE id=$certId AND studentId=$studentId
-    ");
+        WHERE id = $certId
+        AND studentId = $studentId
+    ";
 
-    jsonResponse(true, "Certification Deleted");
+    if (!$conn->query($deleteQuery)) {
+        jsonResponse(false, "Delete failed: " . $conn->error);
+    }
+
+    jsonResponse(true, "Certification Deleted Successfully");
 }
