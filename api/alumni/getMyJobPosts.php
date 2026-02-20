@@ -9,12 +9,6 @@ $user = authenticate("ALUMNI");
 $db = new Database();
 $conn = $db->getConnection();
 
-$data = json_decode(file_get_contents("php://input"), true);
-
-if (!isset($data['jobId'])) {
-    jsonResponse(false, "Job ID required", null, 400);
-}
-
 /* Get Alumni Profile */
 $alumniQuery = "SELECT * FROM Alumni WHERE userId={$user['id']} LIMIT 1";
 $alumni = $conn->query($alumniQuery)->fetch_assoc();
@@ -23,15 +17,20 @@ if (!$alumni) {
     jsonResponse(false, "Alumni profile not found", null, 404);
 }
 
-/* Delete Only His Job */
+/* Fetch Only His Job Posts */
 $query = "
-DELETE FROM JobPost
-WHERE id={$data['jobId']}
-AND alumniId={$alumni['id']}
+SELECT id, title, description, createdAt
+FROM JobPost
+WHERE alumniId={$alumni['id']}
+ORDER BY createdAt DESC
 ";
 
-if (!$conn->query($query)) {
-    jsonResponse(false, "Delete failed", $conn->error, 500);
+$result = $conn->query($query);
+
+$jobs = [];
+
+while ($row = $result->fetch_assoc()) {
+    $jobs[] = $row;
 }
 
-jsonResponse(true, "Job Deleted Successfully");
+jsonResponse(true, "My Job Posts", $jobs);

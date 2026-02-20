@@ -68,7 +68,7 @@ function initDashboard() {
       <div onclick="showStudentProjects()"> Projects</div>
       <div onclick="showStudentEducation()"> Education</div>
       <div onclick="showStudentCertifications()">Certifications</div>
-      <div onclick="showJobPosts()">Job Posts</div>
+      <div onclick="showJobPosts()">Job Posts By Alumni</div>
       <div onclick="showSkillGapAnalysis()"> Skill Gap</div>
       <div onclick="showGenerateResume()"> Generate Resume</div>
       <div onclick="showNotifications()"> Notifications</div>
@@ -86,7 +86,7 @@ function initDashboard() {
       <div onclick="showCreateJobPost()">Post Job</div>
       <div onclick="showAlumniMentorSlots()"> Mentorship Slots</div>
       <div onclick="showCreateMentorSlot()"> Create Slot</div>
-      <div onclick="showProfile()">Profile</div>
+      
       <div onclick="showChangePassword()"> Password</div>
       <div onclick="logout()"> Logout</div>
     `;
@@ -786,7 +786,7 @@ async function bookMentorSlot(slotId) {
   }
 }
 
-async function showJobPosts(){
+async function showJobPosts() {
   const token = localStorage.getItem("token");
 
   const res = await fetch("../api/student/getJobPosts.php", {
@@ -795,22 +795,45 @@ async function showJobPosts(){
 
   const data = await res.json();
 
-  let html = "<h2> Job Posts from Alumni</h2>";
+  let html = "<h2>Job Posts from Alumni</h2>";
 
-  if(data.data && data.data.length > 0) {
+  if (data.data && data.data.length > 0) {
     html += "<div class='grid'>";
+
     data.data.forEach(job => {
+
+      const email = job.alumniEmail || "";
+
       html += `
         <div class="card">
           <h4>${job.title}</h4>
+
           <p><strong>Posted by:</strong> ${job.alumniName || 'Anonymous'}</p>
-          <p class="secondary">${job.company || 'Company Name'}</p>
+
           <p><strong>Description:</strong> ${job.description}</p>
-          <p class="secondary"> ${job.alumniEmail}</p>
-          <p class="secondary"> ${job.alumniPhone || 'N/A'}</p>
+
+          <p class="secondary">${email}</p>
+          <p class="secondary">${job.alumniPhone || 'N/A'}</p>
+
+          ${
+            email
+              ? `<a href="mailto:${email}"
+                   style="display:inline-block;
+                          margin-top:10px;
+                          padding:8px 14px;
+                          background:#f4a261;
+                          color:#000;
+                          text-decoration:none;
+                          border-radius:6px;
+                          font-weight:600;">
+                   Mail Me
+                 </a>`
+              : `<p style="color:red;">Email not available</p>`
+          }
         </div>
       `;
     });
+
     html += "</div>";
   } else {
     html += "<p>No job posts available</p>";
@@ -818,7 +841,14 @@ async function showJobPosts(){
 
   document.getElementById("content").innerHTML = html;
 }
+function sendMail(email, jobTitle) {
+  const subject = encodeURIComponent("Regarding Job: " + jobTitle);
+  const body = encodeURIComponent(
+    "Hello,\n\nI am interested in the job position: " + jobTitle + ".\n\nThank you."
+  );
 
+  window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+}
 function showSkillGapAnalysis() {
   window.open("https://google.com", "_blank");
 }
@@ -1052,67 +1082,154 @@ async function showAlumniDashboard(){
 
   document.getElementById("content").innerHTML = html;
 }
+ async function deleteJob(jobId) {
+  if (!confirm("Are you sure?")) return;
 
-async function showMyJobPosts(){
-  const token = localStorage.getItem("token");
+  try {
+    const response = await fetch(
+      "/placementpro/api/alumni/deleteJobPost.php",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + localStorage.getItem("token")
+        },
+        body: JSON.stringify({ jobId })
+      }
+    );
 
-  const res = await fetch("../api/student/getJobPosts.php", {
-    headers: { "Authorization": "Bearer " + token }
-  });
+    const data = await response.json();
 
-  const data = await res.json();
+    if (!data.success) {
+      alert(data.message);
+      return;
+    }
 
-  let html = "<h2> My Job Posts</h2>";
+    alert("Deleted Successfully");
+    showMyJobPosts();
 
-  if(data.data && data.data.length > 0) {
-    html += "<div class='grid'>";
-    data.data.forEach(job => {
-      html += `
-        <div class="card">
-          <h4>${job.title}</h4>
-          <p class="secondary">${job.company || 'Company'}</p>
-          <p>${job.description}</p>
-          <button onclick="deleteJobPost(${job.id})" class="btn-small btn-danger">Delete</button>
-        </div>
-      `;
-    });
-    html += "</div>";
-  } else {
-    html += "<p>No job posts yet. Create one to get started!</p>";
+  } catch (error) {
+    alert("Something went wrong");
   }
+}
+async function showMyJobPosts() {
+  document.getElementById("content").innerHTML = "<h2>Loading...</h2>";
 
-  document.getElementById("content").innerHTML = html;
+  try {
+    const response = await fetch(
+      "../api/alumni/getMyJobPosts.php",
+      {
+        method: "GET",
+        headers: {
+          "Authorization": "Bearer " + localStorage.getItem("token")
+        }
+      }
+    );
+
+    const text = await response.text();
+    console.log("RAW RESPONSE:", text);
+
+    const data = JSON.parse(text);
+
+    // If PHP returned error (like Alumni not found)
+    if (!data.success) {
+      document.getElementById("content").innerHTML = `
+        <h2>Error</h2>
+        <p>${data.message}</p>
+      `;
+      return;
+    }
+
+    let html = "<h2>My Job Posts</h2>";
+
+    if (!data.data || data.data.length === 0) {
+      html += "<p>No job posts yet.</p>";
+    } else {
+      data.data.forEach(job => {
+        html += `
+          <div class="card">
+            <h3>${job.title}</h3>
+            <p>${job.description}</p>
+            <small>Posted on: ${job.createdAt}</small>
+          </div>
+        `;
+      });
+    }
+
+    document.getElementById("content").innerHTML = html;
+
+  } catch (error) {
+    console.error("FETCH ERROR:", error);
+    document.getElementById("content").innerHTML =
+      "<h2>Failed to load jobs</h2>";
+  }
 }
 
-async function showCreateJobPost(){
+async function showCreateJobPost() {
   document.getElementById("content").innerHTML = `
-    <h2> Create Job Post</h2>
+    <h2>Create Job Post</h2>
 
     <div class="card">
       <form id="jobPostForm">
         <label>Job Title</label>
         <input id="jobTitle" placeholder="e.g., Senior Developer" required>
 
-        <label>Company Name</label>
-        <input id="jobCompany" placeholder="Company name" required>
-
         <label>Description</label>
         <textarea id="jobDesc" placeholder="Job description" required></textarea>
-
-        <label>Salary Range (Optional)</label>
-        <input id="jobSalary" placeholder="e.g., 10-15 LPA">
-
-        <label>Location (Optional)</label>
-        <input id="jobLocation" placeholder="Work location">
 
         <button type="submit" class="btn-primary">Post Job</button>
       </form>
     </div>
   `;
 
-  document.getElementById("jobPostForm").onsubmit = createJobPost;
-}
+  document.getElementById("jobPostForm").onsubmit = async function (e) {
+    e.preventDefault();
 
+    const title = document.getElementById("jobTitle").value.trim();
+    const description = document.getElementById("jobDesc").value.trim();
+
+    if (!title || !description) {
+      alert("All fields required");
+      return;
+    }
+
+    try {
+     const response = await fetch(
+  "../api/alumni/createJobPost.php",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + localStorage.getItem("token")
+    },
+    body: JSON.stringify({ title, description })
+  }
+);
+
+      const text = await response.text();   // get raw response first
+      console.log("RAW RESPONSE:", text);   // debug
+
+      if (!response.ok) {
+        alert("Server Error: " + response.status);
+        return;
+      }
+
+      const data = JSON.parse(text);
+
+      if (!data.success) {
+        alert(data.message);
+        return;
+      }
+
+      alert("Job Posted Successfully");
+      document.getElementById("jobPostForm").reset();
+
+    } catch (error) {
+      console.error("FETCH ERROR:", error);
+      alert("Something went wrong");
+    }
+  };
+}
 async function createJobPost(e) {
   e.preventDefault();
 
