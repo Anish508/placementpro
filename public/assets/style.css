@@ -1,0 +1,157 @@
+body {
+  margin:0;
+  font-family:Segoe UI, sans-serif;
+  background:#1A1C1E;
+  color:#E2E2E2;
+}
+
+.center {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.card {
+  background:#2D2F31;
+  padding:20px;
+  border-radius:12px;
+  width:350px;
+  box-shadow:0 0 15px rgba(0,0,0,0.3);
+  margin-bottom:20px;
+}
+
+.secondary {
+  color:#ABAFB3;
+  font-size:14px;
+}
+
+input {
+  width:100%;
+  padding:10px;
+  margin-bottom:10px;
+  background:#1A1C1E;
+  border:1px solid #444;
+  color:#E2E2E2;
+  border-radius:6px;
+}
+
+button {
+  padding:10px;
+  background:#FDBA74;
+  border:none;
+  color:#1A1C1E;
+  font-weight:bold;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+button:hover {
+  opacity:0.9;
+}
+
+.navbar {
+  display:flex;
+  justify-content:space-between;
+  padding:15px 30px;
+  background:#2D2F31;
+}
+
+.container {
+  padding:30px;
+}
+.layout {
+  display:flex;
+  height:100vh;
+}
+
+.sidebar {
+  width:220px;
+  background:#2D2F31;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+}
+
+.sidebar h2 {
+  margin-bottom:30px;
+}
+
+.menu div {
+  padding:10px;
+  margin-bottom:10px;
+  cursor:pointer;
+  border-radius:6px;
+  color:#ABAFB3;
+}
+
+.menu div:hover {
+  background:#1A1C1E;
+  color:#FDBA74;
+}
+
+.logout {
+  margin-top:auto;
+  background:#FDBA74;
+  color:#1A1C1E;
+}
+
+.main {
+  flex:1;
+  padding:30px;
+  overflow:auto;
+}
+
+label{
+  display:block;
+  margin-top:10px;
+  margin-bottom:4px;
+  font-size:13px;
+  color:#ABAFB3;
+}
+.topbar {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+.user-info {
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.user-info img {
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  object-fit:cover;
+}
+
+.status {
+  padding:5px 10px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:bold;
+}
+
+.status.applied {
+  background:#444;
+  color:#FDBA74;
+}
+
+.status.shortlisted {
+  background:#2D2F31;
+  color:#00BFFF;
+}
+
+.status.selected {
+  background:#1e4620;
+  color:#4CAF50;
+}
+
+.status.rejected {
+  background:#3d1f1f;
+  color:#FF5252;
+}

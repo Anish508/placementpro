@@ -1,35 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PlacementPro Dashboard</title>
-    <link rel="stylesheet" href="css/style.css">
-    <script src="https://kit.fontawesome.com/yourkit.js" crossorigin="anonymous"></script>
+  <title>PlacementPro Dashboard</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
-<div class="sidebar">
-    <h2><i class="fas fa-briefcase"></i> PlacementPro</h2>
-    <ul>
-        <li><i class="fas fa-home"></i> Dashboard</li>
-        <li><i class="fas fa-users"></i> Students</li>
-        <li><i class="fas fa-building"></i> Companies</li>
-        <li><i class="fas fa-chart-line"></i> Analytics</li>
-    </ul>
-</div>
+<div class="layout">
 
-<div class="main">
-    <div class="card">
-        <h3><i class="fas fa-bullhorn"></i> Active Drives</h3>
-        <p>Manage placement drives efficiently</p>
-        <button class="primary-btn">Create Drive</button>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>PlacementPro</h2>
+    <div class="menu" id="menu"></div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+
+    <!-- Top Navigation Bar -->
+    <div class="topbar">
+      <div id="userInfo" class="user-info"></div>
+      <button onclick="logout()" class="logout">Logout</button>
     </div>
 
-    <div class="card">
-        <h3><i class="fas fa-user-check"></i> Eligible Students</h3>
-        <p>View filtered students based on criteria</p>
-        <button class="primary-btn">View Students</button>
-    </div>
+    <!-- Dynamic Page Content -->
+    <div id="content"></div>
+
+  </div>
+
 </div>
+
+<script src="assets/app.js"></script>
+<script>
+  initDashboard();
+</script>
 
 </body>
 </html>
