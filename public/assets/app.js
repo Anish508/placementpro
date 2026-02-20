@@ -1,5 +1,7 @@
-// LOGIN
-// LOGIN
+// ========================================
+// AUTHENTICATION & INITIALIZATION
+// ========================================
+
 async function login() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
@@ -16,6 +18,7 @@ async function login() {
     localStorage.setItem("token", data.data.token);
     localStorage.setItem("role", data.data.user.role);
     localStorage.setItem("name", data.data.user.name);
+    localStorage.setItem("userId", data.data.user.id);
 
     window.location = "dashboard.html";
   } else {
