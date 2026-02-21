@@ -1838,6 +1838,9 @@ async function showEligibleStudents() {
     return;
   }
 
+  // Extract all emails
+  const emailList = data.data.map(s => s.email).join(",");
+
   html += `
     <div class="table-responsive">
       <table class="data-table">
@@ -1864,9 +1867,13 @@ async function showEligibleStudents() {
       </table>
     </div>
 
-    <div style="margin-top: 20px;">
-      <button onclick="notifyAllStudents()" class="btn-primary">
-        📧 Notify All Eligible Students
+    <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button onclick="openMail('${emailList}')" class="btn-primary">
+        📧 Open Gmail with All Emails
+      </button>
+
+      <button onclick="copyEmails('${emailList}')" class="btn-secondary">
+        📋 Copy Email List
       </button>
     </div>
   `;
@@ -1874,8 +1881,28 @@ async function showEligibleStudents() {
   document.getElementById("content").innerHTML = html;
 }
 
+function openMail(emailList) {
 
+  const subject = encodeURIComponent("Placement Drive Notification");
+  const body = encodeURIComponent(
+`Dear Student,
 
+You are eligible for the upcoming placement drive.
+
+Please login to PlacementPro portal and apply before deadline.
+
+Regards,
+Training & Placement Officer`
+  );
+
+  const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${emailList}&su=${subject}&body=${body}`;
+
+  window.open(gmailUrl, "_blank");
+}
+function copyEmails(emailList) {
+  navigator.clipboard.writeText(emailList);
+  alert("Email list copied to clipboard!");
+}
 async function notifyAllStudents() {
 
   const token = localStorage.getItem("token");
